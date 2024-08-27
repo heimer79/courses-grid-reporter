@@ -1,41 +1,77 @@
-/**
- * Retrieves the translation of text.
- *
- * @see https://developer.wordpress.org/block-editor/reference-guides/packages/packages-i18n/
- */
-import { __ } from '@wordpress/i18n';
+import { useState, useEffect } from '@wordpress/element';
+import { InspectorControls } from '@wordpress/block-editor';
+import { PanelBody, TextControl, Button } from '@wordpress/components';
 
-/**
- * React hook that is used to mark the block wrapper element.
- * It provides all the necessary props like the class name.
- *
- * @see https://developer.wordpress.org/block-editor/reference-guides/packages/packages-block-editor/#useblockprops
- */
-import { useBlockProps } from '@wordpress/block-editor';
+const CoursesGridEdit = ({ attributes, setAttributes }) => {
+    const [courses, setCourses] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-/**
- * Lets webpack process CSS, SASS or SCSS files referenced in JavaScript files.
- * Those files can contain any CSS code that gets applied to the editor.
- *
- * @see https://www.npmjs.com/package/@wordpress/scripts#using-css
- */
-import './editor.scss';
+    useEffect(() => {
+        if (attributes.endpointUrl) {
+            fetch(attributes.endpointUrl)
+                .then((response) => response.json())
+                .then((data) => {
+                    setCourses(data);
+                    setLoading(false);
+                })
+                .catch((error) => {
+                    console.error('Error fetching courses:', error);
+                    setLoading(false);
+                });
+        }
+    }, [attributes.endpointUrl]);
 
-/**
- * The edit function describes the structure of your block in the context of the
- * editor. This represents what the editor will render when the block is used.
- *
- * @see https://developer.wordpress.org/block-editor/reference-guides/block-api/block-edit-save/#edit
- *
- * @return {Element} Element to render.
- */
-export default function Edit() {
-	return (
-		<p { ...useBlockProps() }>
-			{ __(
-				'Courses Grid Reporter – hello from the editor!',
-				'courses-grid-reporter'
-			) }
-		</p>
-	);
-}
+    const handleButtonClick = () => {
+        const availableCourses = courses.filter(course => course.workflow_state === 'available');
+        alert(`There are ${availableCourses.length} courses available.`);
+    };
+
+    return (
+        <>
+            <InspectorControls>
+                <PanelBody title="Endpoint Settings">
+                    <TextControl
+                        label="Endpoint URL"
+                        value={attributes.endpointUrl}
+                        onChange={(value) => setAttributes({ endpointUrl: value })}
+                    />
+                </PanelBody>
+            </InspectorControls>
+            <div className="courses-grid">
+                {loading ? (
+                    <p>Loading courses...</p>
+                ) : (
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Course Code</th>
+                                <th>Workflow State</th>
+                                <th>Start Date</th>
+                                <th>End Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {courses.map((course) => (
+                                <tr key={course.id}>
+                                    <td>{course.id}</td>
+                                    <td>{course.name}</td>
+                                    <td>{course.course_code}</td>
+                                    <td>{course.workflow_state}</td>
+                                    <td>{course.start_at}</td>
+                                    <td>{course.end_at}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                )}
+                <Button isPrimary onClick={handleButtonClick}>
+                    Generate Report
+                </Button>
+            </div>
+        </>
+    );
+};
+
+export default CoursesGridEdit;

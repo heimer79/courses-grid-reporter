@@ -1,19 +1,20 @@
 {
-  "$schema": "https://schemas.wp.org/trunk/block.json",
-  "apiVersion": 3,
-  "name": "create-block/courses-grid-reporter",
-  "version": "0.1.0",
+  "apiVersion": 2,
+  "name": "acue/courses-grid-reporter",
   "title": "Courses Grid Reporter",
   "category": "widgets",
-  "icon": "smiley",
-  "description": "Example block scaffolded with Create Block tool.",
-  "example": {},
+  "icon": "book",
+  "description": "A block that displays a grid of courses.",
   "supports": {
     "html": false
   },
-  "textdomain": "courses-grid-reporter",
+  "attributes": {
+    "endpointUrl": {
+      "type": "string",
+      "default": "https://lmstest.acue.org/ACUE-microcourselist.json"
+    }
+  },
   "editorScript": "file:./index.js",
-  "editorStyle": "file:./index.css",
-  "style": "file:./style-index.css",
-  "viewScript": "file:./view.js"
+  "render": "file:./render.php",
+  "style": "file:./style.css"
 }
