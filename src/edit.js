@@ -21,6 +21,17 @@ const CoursesGridEdit = ({ attributes, setAttributes }) => {
         }
     }, [attributes.endpointUrl]);
 
+    const sortTable = (columnIndex) => {
+        const table = document.querySelector(".courses-grid table");
+        const rows = Array.from(table.rows).slice(1);
+        const sortedRows = rows.sort((a, b) => {
+            const aText = a.cells[columnIndex].innerText.toLowerCase();
+            const bText = b.cells[columnIndex].innerText.toLowerCase();
+            return aText.localeCompare(bText);
+        });
+        table.tBodies[0].append(...sortedRows);
+    };
+
     const handleButtonClick = () => {
         const availableCourses = courses.filter(course => course.workflow_state === 'available');
         alert(`There are ${availableCourses.length} courses available.`);
@@ -44,12 +55,12 @@ const CoursesGridEdit = ({ attributes, setAttributes }) => {
                     <table>
                         <thead>
                             <tr>
-                                <th>ID</th>
-                                <th>Name</th>
-                                <th>Course Code</th>
-                                <th>Workflow State</th>
-                                <th>Start Date</th>
-                                <th>End Date</th>
+                                <th onClick={() => sortTable(0)}>ID</th>
+                                <th onClick={() => sortTable(1)}>Name</th>
+                                <th onClick={() => sortTable(2)}>Course Code</th>
+                                <th onClick={() => sortTable(3)}>Workflow State</th>
+                                <th onClick={() => sortTable(4)}>Start Date</th>
+                                <th onClick={() => sortTable(5)}>End Date</th>
                             </tr>
                         </thead>
                         <tbody>

@@ -41,6 +41,16 @@ const CoursesGridEdit = ({
       });
     }
   }, [attributes.endpointUrl]);
+  const sortTable = columnIndex => {
+    const table = document.querySelector(".courses-grid table");
+    const rows = Array.from(table.rows).slice(1);
+    const sortedRows = rows.sort((a, b) => {
+      const aText = a.cells[columnIndex].innerText.toLowerCase();
+      const bText = b.cells[columnIndex].innerText.toLowerCase();
+      return aText.localeCompare(bText);
+    });
+    table.tBodies[0].append(...sortedRows);
+  };
   const handleButtonClick = () => {
     const availableCourses = courses.filter(course => course.workflow_state === 'available');
     alert(`There are ${availableCourses.length} courses available.`);
@@ -55,7 +65,19 @@ const CoursesGridEdit = ({
     })
   }))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: "courses-grid"
-  }, loading ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", null, "Loading courses...") : (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("table", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("thead", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("tr", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("th", null, "ID"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("th", null, "Name"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("th", null, "Course Code"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("th", null, "Workflow State"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("th", null, "Start Date"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("th", null, "End Date"))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("tbody", null, courses.map(course => (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("tr", {
+  }, loading ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", null, "Loading courses...") : (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("table", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("thead", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("tr", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("th", {
+    onClick: () => sortTable(0)
+  }, "ID"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("th", {
+    onClick: () => sortTable(1)
+  }, "Name"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("th", {
+    onClick: () => sortTable(2)
+  }, "Course Code"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("th", {
+    onClick: () => sortTable(3)
+  }, "Workflow State"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("th", {
+    onClick: () => sortTable(4)
+  }, "Start Date"), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("th", {
+    onClick: () => sortTable(5)
+  }, "End Date"))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("tbody", null, courses.map(course => (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("tr", {
     key: course.id
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("td", null, course.id), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("td", null, course.name), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("td", null, course.course_code), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("td", null, course.workflow_state), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("td", null, course.start_at), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("td", null, course.end_at))))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_3__.Button, {
     isPrimary: true,
