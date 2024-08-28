@@ -29,27 +29,67 @@ const CoursesGridEdit = ({
   setAttributes
 }) => {
   const [statusMessage, setStatusMessage] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_1__.useState)('Loading...');
-  (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_1__.useEffect)(() => {
+  const [isLoading, setIsLoading] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_1__.useState)(false);
+  const [isError, setIsError] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_1__.useState)(false);
+  const blockProps = (0,_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_2__.useBlockProps)({
+    className: 'p-4 bg-white rounded-lg shadow-md'
+  });
+  const fetchData = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_1__.useCallback)(() => {
     if (attributes.endpointUrl) {
-      // Construct the URL for the proxy script
+      setIsLoading(true);
+      setIsError(false);
+      setStatusMessage('Loading...');
       const proxyUrl = `${window.location.origin}/wp-admin/admin-ajax.php?action=proxy_request_to_api&api_url=${encodeURIComponent(attributes.endpointUrl)}`;
       fetch(proxyUrl).then(response => response.json()).then(data => {
         if (data.success) {
-          setStatusMessage('Data displayed');
-          const courses = JSON.parse(data.data);
-          if (courses.length === 0) {
-            setStatusMessage('No data found');
+          try {
+            const courses = JSON.parse(data.data);
+            setStatusMessage(courses.length === 0 ? 'No data found' : 'Data displayed in front end');
+            setIsError(courses.length === 0);
+          } catch (error) {
+            console.error('Error parsing JSON:', error);
+            setStatusMessage('Error parsing data');
+            setIsError(true);
           }
         } else {
           setStatusMessage('Error fetching data');
+          setIsError(true);
         }
       }).catch(error => {
         console.error('Error fetching courses:', error);
         setStatusMessage('Error connecting to the API');
+        setIsError(true);
+      }).finally(() => {
+        setIsLoading(false);
       });
+    } else {
+      setStatusMessage('No endpoint URL provided');
+      setIsError(true);
     }
   }, [attributes.endpointUrl]);
-  return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(react__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_2__.InspectorControls, null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_3__.PanelBody, {
+  (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_1__.useEffect)(() => {
+    fetchData();
+  }, [fetchData]);
+  return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    ...blockProps
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_2__.BlockControls, null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_3__.ToolbarGroup, null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_3__.ToolbarButton, {
+    icon: "grid-view",
+    label: "Grid View",
+    onClick: () => setAttributes({
+      viewMode: 'grid'
+    })
+  }), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_3__.ToolbarButton, {
+    icon: "list-view",
+    label: "List View",
+    onClick: () => setAttributes({
+      viewMode: 'list'
+    })
+  }), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_3__.ToolbarButton, {
+    icon: "update",
+    label: "Refresh Data",
+    onClick: fetchData,
+    disabled: isLoading
+  }))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_2__.InspectorControls, null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_3__.PanelBody, {
     title: "Endpoint Settings"
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_3__.TextControl, {
     label: "Endpoint URL",
@@ -59,7 +99,11 @@ const CoursesGridEdit = ({
     })
   }))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: "courses-grid"
-  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", null, statusMessage)));
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", {
+    className: `text-lg font-semibold ${isLoading ? 'text-blue-600' : isError ? 'text-red-600' : 'text-green-600'}`
+  }, statusMessage), isLoading && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", {
+    className: "text-blue-600 text-lg"
+  }, "Refreshing data...")));
 };
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (CoursesGridEdit);
 
