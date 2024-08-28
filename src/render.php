@@ -35,12 +35,21 @@ function render_courses_grid_reporter_block( $attributes ) {
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-blue-100">
                 <tr>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-blue-800 uppercase tracking-wider cursor-pointer hover:bg-blue-200" onclick="sortTable(0)">ID</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-blue-800 uppercase tracking-wider cursor-pointer hover:bg-blue-200" onclick="sortTable(1)">Name</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-blue-800 uppercase tracking-wider cursor-pointer hover:bg-blue-200" onclick="sortTable(2)">Course Code</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-blue-800 uppercase tracking-wider cursor-pointer hover:bg-blue-200" onclick="sortTable(3)">Workflow State</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-blue-800 uppercase tracking-wider cursor-pointer hover:bg-blue-200" onclick="sortTable(4)">Start Date</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-blue-800 uppercase tracking-wider cursor-pointer hover:bg-blue-200" onclick="sortTable(5)">End Date</th>
+                    <?php
+                    $headers = ['ID', 'Name', 'Course Code', 'Workflow State', 'Start Date', 'End Date'];
+                    foreach ($headers as $index => $header) :
+                    ?>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-blue-800 uppercase tracking-wider cursor-pointer hover:bg-blue-200 group" onclick="sortTable(<?php echo $index; ?>)">
+                        <div class="flex items-center">
+                            <?php echo esc_html($header); ?>
+                            <span class="ml-2 invisible group-hover:visible">
+                                <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
+                                </svg>
+                            </span>
+                        </div>
+                    </th>
+                    <?php endforeach; ?>
                 </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
@@ -65,15 +74,45 @@ function render_courses_grid_reporter_block( $attributes ) {
     </div>
 
     <script>
+    let currentSortColumn = -1;
+    let isAscending = true;
+
     function sortTable(columnIndex) {
         const table = document.querySelector(".courses-grid table");
         const tbody = table.querySelector("tbody");
         const rows = Array.from(tbody.querySelectorAll("tr"));
+        const headers = table.querySelectorAll("th");
+
+        // Reset all headers
+        headers.forEach(header => {
+            header.querySelector('svg').classList.remove('text-blue-500');
+            header.querySelector('svg').classList.add('text-gray-400');
+            header.querySelector('svg').innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>';
+        });
+
+        // Toggle sort direction if clicking on the same column
+        if (currentSortColumn === columnIndex) {
+            isAscending = !isAscending;
+        } else {
+            isAscending = true;
+        }
+
+        currentSortColumn = columnIndex;
+
+        // Update the clicked header
+        const clickedHeader = headers[columnIndex];
+        clickedHeader.querySelector('svg').classList.remove('text-gray-400');
+        clickedHeader.querySelector('svg').classList.add('text-blue-500');
+        clickedHeader.querySelector('svg').innerHTML = isAscending
+            ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>'
+            : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>';
+
         const sortedRows = rows.sort((a, b) => {
             const aText = a.children[columnIndex].innerText.toLowerCase();
             const bText = b.children[columnIndex].innerText.toLowerCase();
-            return aText.localeCompare(bText);
+            return isAscending ? aText.localeCompare(bText) : bText.localeCompare(aText);
         });
+
         tbody.innerHTML = '';
         sortedRows.forEach(row => tbody.appendChild(row));
     }
