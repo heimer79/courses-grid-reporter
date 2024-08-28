@@ -5,13 +5,29 @@ function render_courses_grid_reporter_block( $attributes ) {
     // Fetch the JSON data from the endpoint
     $response = wp_remote_get( esc_url( $endpoint_url ) );
     if ( is_wp_error( $response ) ) {
+        error_log('Courses Grid: Error fetching data - ' . $response->get_error_message());
         return '<p>Unable to retrieve courses data.</p>';
     }
 
-    $courses = json_decode( wp_remote_retrieve_body( $response ), true );
-    if ( empty( $courses ) || !is_array( $courses ) ) {
-        return '<p>No courses found.</p>';
+    $body = wp_remote_retrieve_body( $response );
+    $courses = json_decode( $body, true );
+    
+    // Log the raw data for debugging
+    error_log('Courses Grid: Raw data received - ' . print_r($courses, true));
+
+    if ( !is_array( $courses ) || empty( $courses ) ) {
+        error_log('Courses Grid: Invalid or empty data received');
+        return '<p>No courses found or invalid data received.</p>';
     }
+
+    // Filter and count available courses
+    $available_courses = array_filter($courses, function($course) {
+        return isset($course['workflow_state']) && $course['workflow_state'] === 'available';
+    });
+    $available_count = count($available_courses);
+
+    // Log the count of available courses
+    error_log('Courses Grid: Number of available courses - ' . $available_count);
 
     ob_start();
     ?>
@@ -29,12 +45,12 @@ function render_courses_grid_reporter_block( $attributes ) {
         <div class="bg-white divide-y divide-gray-200">
             <?php foreach ( $courses as $course ) : ?>
                 <div class="grid grid-cols-6">
-                    <div class="p-2 text-gray-900"><?php echo esc_html( $course['id'] ); ?></div>
-                    <div class="p-2 text-gray-900"><?php echo esc_html( $course['name'] ); ?></div>
-                    <div class="p-2 text-gray-900"><?php echo esc_html( $course['course_code'] ); ?></div>
-                    <div class="p-2 text-gray-900"><?php echo esc_html( $course['workflow_state'] ); ?></div>
-                    <div class="p-2 text-gray-900"><?php echo esc_html( $course['start_at'] ); ?></div>
-                    <div class="p-2 text-gray-900"><?php echo esc_html( $course['end_at'] ); ?></div>
+                    <div class="p-2 text-gray-900"><?php echo esc_html( $course['id'] ?? 'N/A' ); ?></div>
+                    <div class="p-2 text-gray-900"><?php echo esc_html( $course['name'] ?? 'N/A' ); ?></div>
+                    <div class="p-2 text-gray-900"><?php echo esc_html( $course['course_code'] ?? 'N/A' ); ?></div>
+                    <div class="p-2 text-gray-900"><?php echo esc_html( $course['workflow_state'] ?? 'N/A' ); ?></div>
+                    <div class="p-2 text-gray-900"><?php echo esc_html( $course['start_at'] ?? 'N/A' ); ?></div>
+                    <div class="p-2 text-gray-900"><?php echo esc_html( $course['end_at'] ?? 'N/A' ); ?></div>
                 </div>
             <?php endforeach; ?>
         </div>
@@ -55,10 +71,8 @@ function render_courses_grid_reporter_block( $attributes ) {
     }
 
     document.getElementById('report-button').addEventListener('click', function() {
-        const availableCourses = <?php echo json_encode(array_filter($courses, function($course) {
-            return $course['workflow_state'] === 'available';
-        })); ?>;
-        alert(`There are ${availableCourses.length} courses available.`);
+        const availableCoursesCount = <?php echo $available_count; ?>;
+        alert(`There are ${availableCoursesCount} courses available.`);
     });
     </script>
     <?php
