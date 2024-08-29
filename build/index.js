@@ -24,26 +24,54 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
+
+/**
+ * The edit component for the Courses Grid block.
+ * 
+ * This component handles the user interface and logic for configuring and displaying
+ * the courses grid in the block editor. It provides controls for setting the endpoint URL,
+ * the report email, and refreshing the data.
+ *
+ * @param {Object} props - The component properties.
+ * @param {Object} props.attributes - The block attributes.
+ * @param {Function} props.setAttributes - The function to update block attributes.
+ * @return {JSX.Element} The rendered edit component.
+ */
 const CoursesGridEdit = ({
   attributes,
   setAttributes
 }) => {
+  // Local state management
   const [statusMessage, setStatusMessage] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_1__.useState)('Loading...');
   const [isLoading, setIsLoading] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_1__.useState)(false);
   const [isError, setIsError] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_1__.useState)(false);
+  const [courseCount, setCourseCount] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_1__.useState)(0);
+  const [reportStatus, setReportStatus] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_1__.useState)('');
+
+  // Block properties, including custom class names
   const blockProps = (0,_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_2__.useBlockProps)({
     className: 'p-4 bg-white rounded-lg shadow-md'
   });
+
+  /**
+   * Fetches data from the endpoint URL and updates the component state.
+   * 
+   * The data is fetched from a proxy URL that forwards the request to the API.
+   * If successful, the number of courses is counted and displayed.
+   */
   const fetchData = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_1__.useCallback)(() => {
     if (attributes.endpointUrl) {
       setIsLoading(true);
       setIsError(false);
       setStatusMessage('Loading...');
+
+      // Construct the proxy URL for the AJAX request
       const proxyUrl = `${window.location.origin}/wp-admin/admin-ajax.php?action=proxy_request_to_api&api_url=${encodeURIComponent(attributes.endpointUrl)}`;
       fetch(proxyUrl).then(response => response.json()).then(data => {
         if (data.success) {
           try {
             const courses = JSON.parse(data.data);
+            setCourseCount(courses.length);
             setStatusMessage(courses.length === 0 ? 'No data found' : 'Data displayed in front end');
             setIsError(courses.length === 0);
           } catch (error) {
@@ -67,6 +95,47 @@ const CoursesGridEdit = ({
       setIsError(true);
     }
   }, [attributes.endpointUrl]);
+
+  /**
+   * Sends a report of the course count to the specified email.
+   * 
+   * The report is sent via an AJAX request, and the status of the operation is
+   * updated in the component's state.
+   */
+  const sendReport = () => {
+    if (!attributes.reportEmail) {
+      setReportStatus('No email address provided');
+      return;
+    }
+    setReportStatus('Sending report...');
+
+    // Prepare the data for the AJAX request
+    const reportData = {
+      action: 'send_courses_report',
+      count: courseCount,
+      email: attributes.reportEmail
+    };
+
+    // Send the report via a POST request to the WordPress admin-ajax.php endpoint
+    fetch(window.location.origin + '/wp-admin/admin-ajax.php', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: new URLSearchParams(reportData)
+    }).then(response => response.json()).then(data => {
+      if (data.success) {
+        setReportStatus('Report sent successfully!');
+      } else {
+        setReportStatus('Error sending report. Please try again.');
+      }
+    }).catch(error => {
+      console.error('Error:', error);
+      setReportStatus('An error occurred while sending the report.');
+    });
+  };
+
+  // Fetch data on component mount and when the endpoint URL changes
   (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_1__.useEffect)(() => {
     fetchData();
   }, [fetchData]);
@@ -97,13 +166,27 @@ const CoursesGridEdit = ({
     onChange: value => setAttributes({
       endpointUrl: value
     })
-  }))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+  }), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_3__.TextControl, {
+    label: "Report Email",
+    value: attributes.reportEmail,
+    onChange: reportEmail => setAttributes({
+      reportEmail
+    })
+  }), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_3__.Button, {
+    isPrimary: true,
+    onClick: sendReport,
+    disabled: !attributes.reportEmail || isLoading
+  }, "Send Report"), reportStatus && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", {
+    className: `mt-2 ${reportStatus.includes('Error') ? 'text-red-600' : 'text-green-600'}`
+  }, reportStatus))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: "courses-grid"
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", {
     className: `text-lg font-semibold ${isLoading ? 'text-blue-600' : isError ? 'text-red-600' : 'text-green-600'}`
   }, statusMessage), isLoading && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", {
     className: "text-blue-600 text-lg"
-  }, "Refreshing data...")));
+  }, "Refreshing data..."), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", {
+    className: "mt-2"
+  }, "Total courses: ", courseCount)));
 };
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (CoursesGridEdit);
 
@@ -248,7 +331,7 @@ module.exports = window["wp"]["element"];
   \************************/
 /***/ ((module) => {
 
-module.exports = /*#__PURE__*/JSON.parse('{"apiVersion":2,"name":"acue/courses-grid-reporter","title":"Courses Grid Reporter","category":"widgets","icon":"book","description":"A block that displays a grid of courses.","supports":{"html":false},"attributes":{"endpointUrl":{"type":"string","default":"https://lmstest.acue.org/ACUE-microcourselist.json"}},"editorScript":"file:./index.js","render":"file:./render.php","style":"file:./style.css"}');
+module.exports = /*#__PURE__*/JSON.parse('{"apiVersion":2,"name":"acue/courses-grid-reporter","title":"Courses Grid Reporter","category":"widgets","icon":"book","description":"A block that displays a grid of courses.","supports":{"html":false},"attributes":{"endpointUrl":{"type":"string","default":"https://lmstest.acue.org/ACUE-microcourselist.json"},"reportEmail":{"type":"string","default":""}},"editorScript":"file:./index.js","render":"file:./render.php","style":"file:./style.css"}');
 
 /***/ })
 

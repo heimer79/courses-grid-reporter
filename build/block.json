@@ -12,6 +12,10 @@
     "endpointUrl": {
       "type": "string",
       "default": "https://lmstest.acue.org/ACUE-microcourselist.json"
+    },
+    "reportEmail": {
+      "type": "string",
+      "default": ""
     }
   },
   "editorScript": "file:./index.js",
